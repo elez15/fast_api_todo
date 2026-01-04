@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 from schemas import TodoCreate, TodoResponse
 from database import session_local, custom_base, engine
@@ -47,10 +47,17 @@ def get_all_todos(db: Session = Depends(get_db)):
 
 # todo_id is path parameter, which will be expected in the function
 @app.get("/todos/{todo_id}", response_model=TodoResponse)
-def get_single_todo(todo_id: int, db: Session = Depends(get_db)):
+# This line included path to add more details to the path parameter
+# we can add constraint for path parameter like value greaterthan(gt) or lesserthan(lt)
+def get_single_todo(
+    todo_id: int = Path(None, description="ID of the user"),
+    db: Session = Depends(get_db),
+):
     # we filtering by id and also the first occurance
     res_id = db.query(TodoModel).filter(TodoModel.id == todo_id).first()
     if not res_id:
+        # so we can add status code using status module
+        # raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Todo ID not found.")
         raise HTTPException(status_code=404, detail="Todo ID not found.")
     return res_id
 
